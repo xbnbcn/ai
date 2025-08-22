@@ -1,15 +1,2134 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="zh-CN">
+
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Home</title>
-  <meta name="description" content="Starter index.html">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>双模式AI 2048游戏（最高数字10）</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Clear Sans", "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-color: #faf8ef;
+            padding: 20px;
+            color: #776e65;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            align-items: flex-start;
+        }
+
+        .game-area {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        h1 {
+            font-size: 40px;
+            margin-bottom: 15px;
+            color: #776e65;
+            text-align: center;
+        }
+
+        .status-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .mode-switch {
+            background-color: #4e6ca3;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 18px;
+            display: inline-block;
+            font-weight: bold;
+        }
+
+        .score-container {
+            background-color: #bbada0;
+            color: #eee4da;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 18px;
+            display: inline-block;
+        }
+
+        .score-container span {
+            color: white;
+            font-weight: bold;
+            font-size: 22px;
+        }
+
+        .high-count-container {
+            background-color: #f2b179;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 18px;
+            display: inline-block;
+        }
+
+        .high-count-container span {
+            color: white;
+            font-weight: bold;
+            font-size: 22px;
+        }
+
+        .storage-status {
+            font-size: 14px;
+            padding: 5px 10px;
+            border-radius: 3px;
+            background-color: #edc22e;
+            color: #776e65;
+            display: none;
+        }
+
+        .storage-status.visible {
+            display: inline-block;
+        }
+
+        .ai-move-indicator {
+            background-color: #8f7a66;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            display: inline-block;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .ai-move-indicator.visible {
+            opacity: 1;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            background-color: #bbada0;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            min-height: 500px;
+        }
+
+        .cell {
+            width: 100%;
+            aspect-ratio: 1/1;
+            background-color: #cdc1b4;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(18px, 5vw, 24px);
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        .control-areas {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            max-width: 350px;
+        }
+
+        .control-panel {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .control-panel h3 {
+            margin-bottom: 15px;
+            color: #776e65;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #bbada0;
+        }
+
+        .tile-0 {
+            background-color: #ffec99;
+            color: #776e65;
+            border: 2px solid #d4b94e;
+        }
+
+        .tile-1 {
+            background-color: #eee4da;
+            color: #776e65;
+        }
+
+        .tile-2 {
+            background-color: #ede0c8;
+            color: #776e65;
+        }
+
+        .tile-3 {
+            background-color: #f2b179;
+            color: white;
+        }
+
+        .tile-4 {
+            background-color: #f59563;
+            color: white;
+        }
+
+        .tile-5 {
+            background-color: #f67c5f;
+            color: white;
+        }
+
+        .tile-6 {
+            background-color: #f65e3b;
+            color: white;
+        }
+
+        .tile-7 {
+            background-color: #edcf72;
+            color: white;
+        }
+
+        .tile-8 {
+            background-color: #edcc61;
+            color: white;
+        }
+
+        .tile-9 {
+            background-color: #edc22e;
+            color: white;
+            box-shadow: 0 0 15px rgba(237, 194, 46, 0.7);
+        }
+
+        .tile-10 {
+            background-color: #3caea3;
+            color: white;
+            box-shadow: 0 0 20px rgba(60, 174, 163, 0.9);
+        }
+
+        button {
+            background-color: #8f7a66;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 3px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin: 5px 2px;
+        }
+
+        button:hover {
+            background-color: #a28361;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .number-btn {
+            width: 40px;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .position-btn {
+            width: 30px;
+            height: 30px;
+            background-color: #cdc1b4;
+            color: #776e65;
+            margin: 2px;
+            padding: 0;
+        }
+
+        .position-btn.selected {
+            background-color: #8f7a66;
+            color: white;
+        }
+
+        .number-btn.selected {
+            background-color: #f2b179;
+        }
+
+        #end-turn {
+            background-color: #4e6ca3;
+        }
+
+        #end-turn:hover {
+            background-color: #5a7cb8;
+        }
+
+        #restart {
+            background-color: #f65e3b;
+        }
+
+        #restart:hover {
+            background-color: #f87156;
+        }
+
+        #mode-toggle {
+            background-color: #edc22e;
+            color: #776e65;
+            width: 100%;
+            font-size: 16px;
+            padding: 10px;
+        }
+
+        #mode-toggle:hover {
+            background-color: #e6b810;
+        }
+
+        .rules {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #776e65;
+            line-height: 1.5;
+        }
+
+        .selection-info {
+            font-size: 14px;
+            margin: 10px 0;
+            color: #776e65;
+        }
+
+        .debug-message {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f8e8e8;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+        }
+
+        .game-over {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(238, 228, 218, 0.73);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            display: none;
+        }
+
+        .game-over p {
+            font-size: 40px;
+            font-weight: bold;
+            color: #776e65;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .game-over button {
+            font-size: 20px;
+            padding: 10px 20px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, .3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .auto-controls {
+            display: none;
+        }
+
+        .manual-controls {
+            display: block;
+        }
+
+        .ai-performance-indicator {
+            background-color: #edc22e;
+            color: #776e65;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .control-area {
+                width: 100%;
+                max-width: 500px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .status-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .board {
+                min-height: 300px;
+            }
+
+            .number-btn {
+                width: 35px;
+                height: 35px;
+            }
+
+            .position-btn {
+                width: 25px;
+                height: 25px;
+            }
+        }
+
+        .mode-auto .auto-controls {
+            display: block;
+        }
+
+        .mode-auto .manual-controls {
+            display: none;
+        }
+
+        .mode-manual .auto-controls {
+            display: none;
+        }
+
+        .mode-manual .manual-controls {
+            display: block;
+        }
+
+        .tile-moved {
+            animation: tileMove 0.2s ease-out;
+        }
+
+        @keyframes tileMove {
+            0% {
+                transform: scale(0.9);
+                opacity: 0.7;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .tile-merged {
+            animation: tileMerge 0.3s ease-out;
+        }
+
+        @keyframes tileMerge {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes gameOverFadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .game-over {
+            animation: gameOverFadeIn 0.5s ease-out;
+        }
+
+        .ai-status {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        /* 存档管理样式 */
+        .save-management {
+            margin-top: 10px;
+        }
+
+        .save-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px;
+            margin-bottom: 5px;
+            background-color: #faf8ef;
+            border-radius: 3px;
+            border: 1px solid #bbada0;
+        }
+
+        .save-info {
+            flex: 1;
+        }
+
+        .save-name {
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .save-details {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .save-actions button {
+            padding: 3px 8px;
+            margin-left: 5px;
+            font-size: 12px;
+        }
+
+        .save-controls {
+            margin-bottom: 10px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .save-controls button {
+            flex: 1;
+        }
+
+        #new-save {
+            background-color: #4e6ca3;
+        }
+
+        #delete-save {
+            background-color: #f65e3b;
+        }
+
+        .save-item.active {
+            background-color: #edc22e;
+            border-color: #d4b94e;
+        }
+
+        .rename-input {
+            width: 100%;
+            padding: 5px;
+            margin-bottom: 5px;
+            border: 1px solid #bbada0;
+            border-radius: 3px;
+        }
+    </style>
 </head>
-<body>
-  <main>
-    <h1>It works!</h1>
-    <p>This is your new index.html.</p>
-  </main>
-</body>
-</html>
+
+<body class="mode-manual">
+    <div class="container">
+        <div class="game-area">
+            <h1>双模式AI 2048游戏</h1>
+
+            <div class="status-bar">
+                <div class="mode-switch" id="current-mode">当前模式: 手动放置</div>
+                <div class="score-container">分数: <span id="score">0</span></div>
+                <div class="high-count-container">10的数量: <span id="ten-count">0</span></div>
+                <div class="storage-status" id="storage-status">游戏已保存</div>
+                <div class="ai-move-indicator" id="ai-move-direction">请放置数字，完成后点击"结束回合"</div>
+            </div>
+
+            <div class="board" id="game-board"></div>
+        </div>
+
+        <div class="control-areas">
+            <div class="control-panel">
+                <h3>模式控制</h3>
+                <button id="mode-toggle" style="width: 100%;">切换到自动运行模式</button>
+                <div class="debug-message" id="debug-info">状态: 手动模式 - 可放置数字并让AI移动</div>
+                <div class="ai-status" id="ai-status">AI状态: 就绪</div>
+            </div>
+
+            <!-- 存档管理面板 -->
+
+
+            <div class="control-panel manual-controls">
+                <h3>放置新方块</h3>
+
+                <div>
+                    <p>选择数字:</p>
+                    <button class="number-btn" data-value="0">0</button>
+                    <button class="number-btn" data-value="1">1</button>
+                    <button class="number-btn" data-value="2">2</button>
+                    <button class="number-btn" data-value="3">3</button>
+                    <button class="number-btn" data-value="4">4</button>
+                    <button class="number-btn" data-value="5">5</button>
+                    <button class="number-btn" data-value="6">6</button>
+                    <button class="number-btn" data-value="7">7</button>
+                    <button class="number-btn" data-value="8">8</button>
+                    <button class="number-btn" data-value="9">9</button>
+                    <button class="number-btn" data-value="10">10</button>
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <p>选择位置 (可多选):</p>
+                    <div id="position-selection"
+                        style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px;"></div>
+                </div>
+
+                <div class="selection-info">已选择 <span id="selected-count">0</span> 个位置</div>
+
+                <button id="place-button" style="width: 100%; margin-top: 5px;" disabled>放置方块</button>
+                <button id="end-turn" style="width: 100%; margin-top: 5px;" disabled>结束回合 (AI移动)</button>
+                <button id="clear-selection" style="width: 100%; background-color: #f65e3b;">清除选择</button>
+            </div>
+            <div class="control-panel">
+                <h3>存档管理</h3>
+                <div class="save-controls">
+                    <button id="new-save">新建存档</button>
+                    <button id="rename-save">重命名</button>
+                    <button id="copy-save">复制</button>
+                    <button id="delete-save">删除</button>
+                </div>
+                <div id="save-slots" class="save-management">
+                    <!-- 存档列表将通过JS动态生成 -->
+                </div>
+            </div>
+            <div class="control-panel auto-controls">
+                <h3>自动运行控制</h3>
+
+                <button id="auto-start" style="width: 100%; background-color: #4e6ca3;">开始自动运行</button>
+                <button id="auto-pause" style="width: 100%;" disabled>暂停</button>
+
+                <div style="margin-top: 10px;">
+                    <label for="move-speed">AI移动速度:</label>
+                    <input type="range" id="move-speed" min="200" max="2000" value="800">
+                    <div class="value-display">
+                        <span>快</span>
+                        <span id="speed-value">800ms</span>
+                        <span>慢</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 10px;">
+                    <label for="ai-style">AI策略风格:</label>
+                    <select id="ai-style">
+                        <option value="balanced">平衡</option>
+                        <option value="safe">稳健</option>
+                        <option value="aggressive">激进</option>
+                    </select>
+                    <div class="ai-status" id="ai-style-desc">当前风格: 平衡（兼顾安全与合并效率）</div>
+                </div>
+
+                <div class="ai-performance-indicator">AI性能: 高级策略模式</div>
+            </div>
+
+            <div class="control-panel">
+                <h3>AI 实时状态</h3>
+                <div id="ai-hud" style="font-size: 13px; line-height: 1.6;">
+                    <div>步数: <span id="hud-steps">0</span> | 上次用时: <span id="hud-lastms">0</span>ms</div>
+                    <div>空格: <span id="hud-empty">0</span> | 10数量: <span id="hud-ten">0</span> | 最大数: <span id="hud-max">0</span></div>
+                    <div>风格: <span id="hud-style">平衡</span> | 搜索深度: <span id="hud-depth">-</span></div>
+                    <div>最佳方向: <span id="hud-bestdir">-</span> | 估计分: <span id="hud-bestscore">-</span></div>
+                    <div>缓存: αβTT <span id="hud-tt">0</span> | EXPTT <span id="hud-extt">0</span> | 评估缓存 <span id="hud-ec">0</span></div>
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <h3>游戏控制</h3>
+
+                <button id="restart" style="width: 100%;">重新开始游戏</button>
+
+                <div class="rules">
+                    <p><strong>规则:</strong></p>
+                    <p>1. 0是特殊方块，可与任何数字合成</p>
+                    <p>2. 0与x合成 → x+1（例如0+3=4）</p>
+                    <p>3. 相同数字合成 → +1（例如2+2=3）</p>
+                    <p>4. 最高只能合成到10，10不能再合成</p>
+                    <p>6. 手动模式: 放置数字后AI移动</p>
+                    <p>7. 自动模式: AI自动生成方块并移动</p>
+                    <p>8. 无法移动时游戏结束</p>
+                    <p style="color: #dc2626;">由 晓白与AI联合开发</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-over" id="game-over">
+        <p id="game-over-message">游戏结束!</p>
+        <p>您的10数量: <span id="final-ten-count">0</span></p>
+        <p>最终得分: <span id="final-score">0</span></p>
+        <button id="play-again">再玩一次</button>
+    </div>
+
+    <script>
+        class Game2048 {
+            constructor() {
+                // 游戏基础状态
+                this.board = Array(4).fill().map(() => Array(4).fill(null));
+                this.score = 0;
+                this.tenCount = 0;
+                this.selectedValue = null;
+                this.selectedPositions = [];
+                this.gameOver = false;
+                this.isAIMoving = false;
+                this.hasPlacedThisTurn = false;
+                this.isAutoMode = false;
+                this.isAutoRunning = false;
+                this.autoPlayInterval = null;
+                this.autoTimeoutId = null; // 自适应自动播放的延时句柄
+                this.moveDelay = 800;
+                this.MAX_NUMBER = 10;
+                this.moveCounter = 0;
+                this.lastDecisionMs = 0; // 上一次AI决策耗时
+                // AI回合锁定机制
+                this.isAITurnLocked = false;
+
+                // 存档相关
+                this.saves = [];
+                this.currentSaveId = null;
+                // 高级AI参数（增强版权重设置）
+                this.aiParams = {
+                    searchDepth: 5,          // 基础搜索深度
+                    emptyWeight: 24,         // 空格权重提升（更重视空间保留）
+                    monoWeight: 26,          // 单调性权重提升（更重视数字有序排列）
+                    cornerWeight: 30,        // 角落保护权重提升（强化高数字在角落的优先级）
+                    smoothWeight: 20,        // 平滑度权重提升（减少数字跳跃，便于合并）
+                    tenClusterWeight: 30,    // 10聚类权重大幅提升（更重视10的聚集）
+                    dangerAvoidance: 18      // 危险规避权重（避免孤立10、小数字包围大数字）
+                };
+
+
+
+                // 置换表（缓存棋盘状态评估结果）
+                this.transpositionTable = new Map();
+                this.transpositionTableMaxSize = 10000; // 减小缓存大小，防止内存问题
+                this.transpositionTableAccessOrder = []; // 记录访问顺序（最新的在末尾）
+
+                // 期望极大化与评估缓存（加速叶子评估与重复节点）
+                this.expectimaxTT = new Map();
+                this.expectimaxTTMaxSize = 20000;
+                this.evalLeafCache = new Map();
+                this.evalLeafCacheMaxSize = 20000;
+
+                // Zobrist 哈希表（4x4x12: 空/null + 0..10），用于更轻量的棋盘键
+                this.zobristTable = null;
+
+                // Web Worker 用于AI搜索
+                this.searchWorker = null;
+                this.searchWorkerReady = false;
+
+                // 扁平棋盘（TypedArray），用于低成本传输和更低内存占用
+                this.flatBoard = new Uint8Array(16); // 取值: 0..10，255 表示 null
+
+                // 位置权重矩阵（角落最高，中心最低）
+                this.positionWeights = [
+                    [15, 10, 8, 15],
+                    [10, 5, 3, 10],
+                    [8, 3, 1, 8],
+                    [15, 10, 8, 15]
+                ];
+
+                // 期望极大化参数
+                this.expectimax = {
+                    maxDepthCap: 10,
+                    chancePruneThreshold: 0.001 // 概率极小的分支可跳过
+                };
+
+                // DOM元素引用
+                this.DOM = {
+                    gameBoard: document.getElementById('game-board'),
+                    scoreElement: document.getElementById('score'),
+                    tenCountElement: document.getElementById('ten-count'),
+                    finalTenCountElement: document.getElementById('final-ten-count'),
+                    finalScoreElement: document.getElementById('final-score'),
+                    placeButton: document.getElementById('place-button'),
+                    endTurnButton: document.getElementById('end-turn'),
+                    clearSelectionButton: document.getElementById('clear-selection'),
+                    restartButton: document.getElementById('restart'),
+                    playAgainButton: document.getElementById('play-again'),
+                    positionSelection: document.getElementById('position-selection'),
+                    selectedCountElement: document.getElementById('selected-count'),
+                    gameOverScreen: document.getElementById('game-over'),
+                    gameOverMessage: document.getElementById('game-over-message'),
+                    aiMoveIndicator: document.getElementById('ai-move-direction'),
+                    debugInfo: document.getElementById('debug-info'),
+                    aiStatus: document.getElementById('ai-status'),
+                    storageStatus: document.getElementById('storage-status'),
+                    modeToggleButton: document.getElementById('mode-toggle'),
+                    currentModeElement: document.getElementById('current-mode'),
+                    autoStartButton: document.getElementById('auto-start'),
+                    autoPauseButton: document.getElementById('auto-pause'),
+                    moveSpeedSlider: document.getElementById('move-speed'),
+                    speedValueElement: document.getElementById('speed-value'),
+                    searchDepthSlider: document.getElementById('search-depth'),
+                    depthValueElement: document.getElementById('depth-value'),
+                    aiStyleSelect: document.getElementById('ai-style'),
+                    aiStyleDesc: document.getElementById('ai-style-desc'),
+                    // HUD
+                    hudSteps: document.getElementById('hud-steps'),
+                    hudLastMs: document.getElementById('hud-lastms'),
+                    hudEmpty: document.getElementById('hud-empty'),
+                    hudTen: document.getElementById('hud-ten'),
+                    hudMax: document.getElementById('hud-max'),
+                    hudStyle: document.getElementById('hud-style'),
+                    hudDepth: document.getElementById('hud-depth'),
+                    hudBestDir: document.getElementById('hud-bestdir'),
+                    hudBestScore: document.getElementById('hud-bestscore'),
+                    hudTTSize: document.getElementById('hud-tt'),
+                    hudExTTSize: document.getElementById('hud-extt'),
+                    hudEvalCache: document.getElementById('hud-ec'),
+                    // 存档相关DOM
+                    saveSlots: document.getElementById('save-slots'),
+                    newSaveButton: document.getElementById('new-save'),
+                    renameSaveButton: document.getElementById('rename-save'),
+                    copySaveButton: document.getElementById('copy-save'),
+                    deleteSaveButton: document.getElementById('delete-save')
+                };
+
+                this.init();
+            }
+            // 将当前 2D 棋盘同步到扁平 Uint8Array
+            syncFlatFromBoard() {
+                let idx = 0;
+                for (let r = 0; r < 4; r++) {
+                    for (let c = 0; c < 4; c++) {
+                        const v = this.board[r][c];
+                        this.flatBoard[idx++] = (v === null ? 255 : v);
+                    }
+                }
+            }
+            // 设置扁平单元格
+            setFlatCell(row, col, value) {
+                const idx = row * 4 + col;
+                this.flatBoard[idx] = (value === null ? 255 : value);
+            }
+
+            // 将扁平棋盘转换为2D（仅在需要evaluateBoard时使用）
+            flatTo2D(flat) {
+                const m = Array(4).fill(null).map(() => Array(4).fill(null));
+                for (let i = 0; i < 16; i++) {
+                    const r = (i >> 2), c = (i & 3);
+                    const v = flat[i];
+                    m[r][c] = (v === 255 ? null : v);
+                }
+                return m;
+            }
+
+            // 预计算每个方向的索引线路（减少每次构建数组）
+            initFlatLineIndices() {
+                this.flatLines = { left: [], right: [], up: [], down: [] };
+                for (let r = 0; r < 4; r++) {
+                    const base = r * 4;
+                    const row = [base, base + 1, base + 2, base + 3];
+                    this.flatLines.left.push(row);
+                    this.flatLines.right.push([...row].reverse());
+                }
+                for (let c = 0; c < 4; c++) {
+                    const col = [c, c + 4, c + 8, c + 12];
+                    this.flatLines.up.push(col);
+                    this.flatLines.down.push([...col].reverse());
+                }
+            }
+
+            // 处理一条线（按顺序已体现方向），返回新线与得分和是否有移动
+            processFlatLine(flat, indices) {
+                const buf = [];
+                for (let k = 0; k < 4; k++) {
+                    const v = flat[indices[k]];
+                    if (v !== 255) buf.push(v);
+                }
+                let scoreGain = 0;
+                let i = 0;
+                const out = [];
+                while (i < buf.length) {
+                    const a = buf[i];
+                    const b = (i + 1 < buf.length) ? buf[i + 1] : undefined;
+                    let merged = null;
+                    if (b !== undefined) {
+                        if (a === 10 || b === 10) {
+                            // 10不能合并
+                        } else if (a === 0 && b === 0) {
+                            merged = 1;
+                        } else if (a === 0 && b !== 0) {
+                            merged = b + 1;
+                        } else if (b === 0 && a !== 0) {
+                            merged = a + 1;
+                        } else if (a === b) {
+                            merged = a + 1;
+                        }
+                    }
+                    if (merged !== null) {
+                        const mv = merged > 10 ? 10 : merged;
+                        out.push(mv);
+                        scoreGain += mv * 10;
+                        i += 2;
+                    } else {
+                        out.push(a);
+                        i += 1;
+                    }
+                }
+                while (out.length < 4) out.push(255);
+                // 写回并判断是否移动
+                let moved = false;
+                for (let k = 0; k < 4; k++) {
+                    if (flat[indices[k]] !== out[k]) moved = true;
+                    flat[indices[k]] = out[k];
+                }
+                return [moved, scoreGain];
+            }
+
+            // 在扁平棋盘上模拟一次移动（不修改原始flat，返回新flat/moved/scoreGain）
+            simulateMoveFlat(flat, direction) {
+                const out = Uint8Array.from(flat);
+                let moved = false;
+                let score = 0;
+                const lines = this.flatLines[direction];
+                for (let i = 0; i < 4; i++) {
+                    const [mv, sc] = this.processFlatLine(out, lines[i]);
+                    if (mv) moved = true;
+                    score += sc;
+                }
+                return [out, moved, score];
+            }
+            // 初始化AI搜索Worker
+            initSearchWorker() {
+                try {
+                    const workerCode = `
+                        let MAX_NUMBER = 10;
+                        let positionWeights = [];
+                        let aiParams = {};
+                        const expectimax = { maxDepthCap: 10, chancePruneThreshold: 0.001 };
+
+                        function safeCopyBoardFlat(b) { return b.slice(); }
+                        function to2D(b) { const m = [[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null]]; for (let i=0;i<16;i++){const v=b[i];m[Math.floor(i/4)][i%4] = (v===-1?null:v);} return m; }
+
+                        function countEmptyCellsFlat(b){let c=0;for(let i=0;i<16;i++){if(b[i]===-1)c++;}return c;}
+                        function getMaxNumberFlat(b){let m=0;for(let i=0;i<16;i++){const v=b[i];if(v>m)m=v;}return m;}
+                        function getGameStage(empty,maxNum){ if (empty>10||maxNum<4) return 'early'; if (empty>4&&maxNum<8) return 'mid'; return 'late'; }
+
+                        function calculatePositionScore2D(board){ let score=0; for(let r=0;r<4;r++){ for(let c=0;c<4;c++){ const v=board[r][c]; if(v!==null){ const vw = v===MAX_NUMBER?3:(v>=8?2.5:(v>=5?2:1)); score += Math.pow(v,1.2)*positionWeights[r][c]*vw; } } } return score/200; }
+                        function calculateMonotonicity2D(board){ let rowScore=0,colScore=0; const totalRowPairs=12,totalColPairs=12; for(let r=0;r<4;r++){ const rowVals=board[r].filter(v=>v!==null); const rowMax=rowVals.length?Math.max(...rowVals):0; for(let c=0;c<3;c++){ const cur=board[r][c]||0, nxt=board[r][c+1]||0; const w = (cur===rowMax||nxt===rowMax)?2:1; rowScore += (cur>=nxt?1:-1)*w; } } for(let c=0;c<4;c++){ const colVals=[board[0][c],board[1][c],board[2][c],board[3][c]].filter(v=>v!==null); const colMax=colVals.length?Math.max(...colVals):0; for(let r=0;r<3;r++){ const cur=board[r][c]||0, nxt=board[r+1][c]||0; const w=(cur===colMax||nxt===colMax)?2:1; colScore += (cur>=nxt?1:-1)*w; } } return (rowScore/totalRowPairs*1.2 + colScore/totalColPairs)/2.2; }
+                        function calculateSmoothness2D(board){ let s=0; for(let r=0;r<4;r++){ for(let c=0;c<4;c++){ const cur=board[r][c]||0; if(cur===0) continue; const w=cur>=8?3:(cur>=5?2:1); if(c<3){ const n=board[r][c+1]||0; if(n>0) s -= Math.abs(cur-n)/w; } if(r<3){ const n=board[r+1][c]||0; if(n>0) s -= Math.abs(cur-n)/w; } } } return s/5; }
+                        function calculateTenCluster2D(board){ const pos=[]; for(let r=0;r<4;r++){ for(let c=0;c<4;c++){ if(board[r][c]===MAX_NUMBER) pos.push({r,c}); } } if(pos.length<2) return 0; let total=0, pairs=0; for(let i=0;i<pos.length;i++){ for(let j=i+1;j<pos.length;j++){ total += Math.abs(pos[i].r-pos[j].r)+Math.abs(pos[i].c-pos[j].c); pairs++; } } const avg=total/pairs; return 1-(avg/6); }
+                        function calculateTenSafety2D(board){ let s=0; const ten=[]; for(let r=0;r<4;r++){ for(let c=0;c<4;c++){ if(board[r][c]===MAX_NUMBER) ten.push({r,c}); } } if(ten.length===0) return 0; ten.forEach(p=>{ const isCorner=(p.r===0||p.r===3)&&(p.c===0||p.c===3); if(isCorner) s+=0.5; const isEdge= (p.r===0||p.r===3||p.c===0||p.c===3) && !isCorner; if(isEdge) s+=0.2; const neigh=[ p.r>0?board[p.r-1][p.c]:null, p.r<3?board[p.r+1][p.c]:null, p.c>0?board[p.r][p.c-1]:null, p.c<3?board[p.r][p.c+1]:null ]; const tenN=neigh.filter(v=>v===MAX_NUMBER).length; s+=tenN*0.3; const emptyN=neigh.filter(v=>v===null).length; s+=emptyN*0.1; const bigN=neigh.filter(v=>v>=8 && v<MAX_NUMBER).length; s+=bigN*0.2; const smallN=neigh.filter(v=>v!==null && v<=3).length; s-=smallN*0.2; }); return Math.max(0, Math.min(1, s/ten.length)); }
+                        function countIsolatedTens2D(board){ let cnt=0; for(let r=0;r<4;r++){ for(let c=0;c<4;c++){ if(board[r][c]!==MAX_NUMBER) continue; const neigh=[ r>0?board[r-1][c]:null, r<3?board[r+1][c]:null, c>0?board[r][c-1]:null, c<3?board[r][c+1]:null ]; const hasTen=neigh.some(v=>v===MAX_NUMBER); const hasEmpty=neigh.some(v=>v===null); if(!hasTen && !hasEmpty) cnt++; } } return cnt; }
+                        function calculateMergePotential2D(board){ let p=0; for(let r=0;r<4;r++){ for(let c=0;c<3;c++){ const a=board[r][c]||0, b=board[r][c+1]||0; if(a===0 && b>0 && b<MAX_NUMBER) p+=b*0.1; else if(a>0 && b>0 && a<MAX_NUMBER && b<MAX_NUMBER){ if(a===b) p+=a*0.2; else if((a===0&&b>0)||(a>0&&b===0)) p+=Math.max(a,b)*0.05; } } } for(let c=0;c<4;c++){ for(let r=0;r<3;r++){ const a=board[r][c]||0, b=board[r+1][c]||0; if(a===0 && b>0 && b<MAX_NUMBER) p+=b*0.1; else if(a>0 && b>0 && a<MAX_NUMBER && b<MAX_NUMBER){ if(a===b) p+=a*0.2; else if((a===0&&b>0)||(a>0&&b===0)) p+=Math.max(a,b)*0.05; } } } return p; }
+                        function calculateDanger2D(board){ let d=0; for(let r=0;r<4;r++){ for(let c=0;c<4;c++){ const v=board[r][c]; if(v===null || v===0) continue; if(v>=8){ const neigh=[ r>0?board[r-1][c]:null, r<3?board[r+1][c]:null, c>0?board[r][c-1]:null, c<3?board[r][c+1]:null ].filter(v=>v!==null); const small=neigh.filter(v=>v<=3).length; d += small*0.2; } if(v===MAX_NUMBER){ const empt=[ r>0?board[r-1][c]===null:false, r<3?board[r+1][c]===null:false, c>0?board[r][c-1]===null:false, c<3?board[r][c+1]===null:false ].filter(Boolean).length; d += (empt===0?0.5:0); } if(v===0){ const big=[ r>0?board[r-1][c]>=5:false, r<3?board[r+1][c]>=5:false, c>0?board[r][c-1]>=5:false, c<3?board[r][c+1]>=5:false ].filter(Boolean).length; d += (big===0?0.1:0); } } } return -d; }
+                        function evaluateBoard2D(board, scoreGain){ const empty= countEmptyCellsFlat(board.flat().map(v=>v===null?-1:v)); const tenCount= board.flat().filter(v=>v===MAX_NUMBER).length; const maxNum = Math.max(...board.flat().filter(v=>v!==null),0); const isolated=countIsolatedTens2D(board); const pos=calculatePositionScore2D(board); const mono=calculateMonotonicity2D(board); const smooth=calculateSmoothness2D(board); const tenCluster=calculateTenCluster2D(board) - (isolated*0.7); const danger=calculateDanger2D(board); const emptyScore=(empty/16)*aiParams.emptyWeight*10; const mergePot=calculateMergePotential2D(board); const tenSafety=calculateTenSafety2D(board); let zeroStrategic=0; for(let r=0;r<4;r++){ for(let c=0;c<4;c++){ if(board[r][c]===0) zeroStrategic += positionWeights[r][c]*0.1; } } const stage = getGameStage(empty, maxNum); const W = stage==='early'? { pos:.8, mono:1.0, smooth:.7, ten:.5, danger:.3, empty:1.2, merge:.8, safety:.6, zero:.5 } : stage==='mid'? { pos:1.0, mono:1.2, smooth:1.0, ten:.8, danger:.6, empty:1.0, merge:1.0, safety:.8, zero:.7 } : { pos:1.3, mono:1.5, smooth:1.2, ten:1.5, danger:1.0, empty:.8, merge:1.2, safety:1.5, zero:1.0 };
+                            return (
+                                scoreGain * (stage==='late'?0.2:0.3) +
+                                pos * aiParams.cornerWeight * W.pos * 0.1 +
+                                mono * aiParams.monoWeight * W.mono * 0.1 +
+                                smooth * aiParams.smoothWeight * W.smooth * 0.1 +
+                                tenCluster * aiParams.tenClusterWeight * W.ten * 0.1 +
+                                danger * 8 * W.danger +
+                                emptyScore * W.empty +
+                                mergePot * 5 * W.merge +
+                                tenSafety * 10 * W.safety +
+                                zeroStrategic * 2 * W.zero
+                            );
+                        }
+                        function transpose2D(mat){ return mat[0].map((_,c)=>mat.map(r=>r[c])); }
+                        function processRow(row, reverse){ let newRow=row.filter(x=>x!==null); let scoreGain=0; let moved=false; if(reverse) newRow=newRow.reverse(); let i=0; while(i<newRow.length-1){ const a=newRow[i], b=newRow[i+1]; if(a===MAX_NUMBER||b===MAX_NUMBER){ i++; continue; } let merged=null; if(a===0 && b===0){ merged=1; moved=true; } else if(a===0 && b!==0){ merged=b+1; moved=true; } else if(b===0 && a!==0){ merged=a+1; moved=true; } else if(a===b){ merged=a+1; moved=true; } if(merged!==null){ merged=Math.min(merged, MAX_NUMBER); newRow[i]=merged; newRow.splice(i+1,1); scoreGain += merged*10; i++; } else { i++; } }
+                            while(newRow.length<4) newRow.push(null);
+                            if(reverse) newRow=newRow.reverse();
+                            return [newRow, moved, scoreGain];
+                        }
+                        function simulateMove2D(board, dir){ let moved=false, scoreGain=0; if(dir==='left'||dir==='right'){ for(let r=0;r<4;r++){ const [nr,mv,sc]=processRow(board[r], dir==='right'); if(mv){ moved=true; scoreGain+=sc; board[r]=nr; } } } else { let t=transpose2D(board); for(let r=0;r<4;r++){ const [nr,mv,sc]=processRow(t[r], dir==='down'); if(mv){ moved=true; scoreGain+=sc; t[r]=nr; } } board=transpose2D(t); } return [board, moved, scoreGain]; }
+                        function generateChanceOutcomes2D(board){ const empty=[]; for(let r=0;r<4;r++){ for(let c=0;c<4;c++){ if(board[r][c]===null) empty.push({r,c}); } } if(empty.length===0) return []; let hasLarge=false; for(let r=0;r<4 && !hasLarge;r++){ for(let c=0;c<4 && !hasLarge;c++){ const v=board[r][c]; if(v!==null && v>=5) hasLarge=true; } } const pZero = hasLarge?0.05:0.0; const pOne = 1 - pZero; const up = 1/empty.length; const out=[]; for(const pos of empty){ if(pOne>expectimax.chancePruneThreshold){ const b1=board.map(row=>row.slice()); b1[pos.r][pos.c]=1; out.push({b:b1,p:pOne*up}); } if(pZero>expectimax.chancePruneThreshold){ const b0=board.map(row=>row.slice()); b0[pos.r][pos.c]=0; out.push({b:b0,p:pZero*up}); } } return out; }
+                        function expectimaxSearch2D(board, depth, isMaxNode, timeLimit){ if(Date.now()>timeLimit) return isMaxNode?-Infinity:Infinity; if(depth===0){ return evaluateBoard2D(board,0); } if(isMaxNode){ const dirs=['up','down','left','right']; let best=-Infinity; for(const d of dirs){ const tb=board.map(r=>r.slice()); const [nb,moved]=simulateMove2D(tb,d); if(!moved) continue; const val=expectimaxSearch2D(nb, depth-1, false, timeLimit); if(val>best) best=val; if(best>100000) break; } return best; } else { const outs=generateChanceOutcomes2D(board); if(outs.length===0) return expectimaxSearch2D(board, depth-1, true, timeLimit); let exp=0; for(const o of outs){ const val=expectimaxSearch2D(o.b, depth-1, true, timeLimit); exp += o.p*val; } return exp; } }
+
+                        onmessage = (e)=>{
+                            const { type, payload } = e.data;
+                            if(type==='init'){
+                                MAX_NUMBER = payload.MAX_NUMBER;
+                                positionWeights = payload.positionWeights;
+                                aiParams = payload.aiParams;
+                                postMessage({ type:'ready' });
+                            } else if(type==='decide'){
+                                const { flatBoard, aiParamsIn, timeBudgetMs } = payload;
+                                aiParams = aiParamsIn;
+                                const board2D = to2D(flatBoard);
+                                const start = Date.now();
+                                let directions=['up','down','left','right'];
+                                // 简单按可行性预筛
+                                const feasible=[];
+                                for(const d of directions){ const tb=board2D.map(r=>r.slice()); const [nb,moved]=simulateMove2D(tb,d); if(moved) feasible.push(d); }
+                                if(feasible.length===0){ postMessage({ type:'result', bestDirection:null, depth:0, bestScore:-Infinity, timeMs: Date.now()-start }); return; }
+                                directions=feasible;
+                                let bestDir=directions[0];
+                                let bestScore=-Infinity;
+                                let currentDepth=2;
+                                const maxDepth=10;
+                                const timeLimit = Date.now()+Math.max(80, timeBudgetMs);
+                                while(currentDepth<=maxDepth && Date.now()<timeLimit){
+                                    for(const d of directions){ if(Date.now()>timeLimit) break; const tb=board2D.map(r=>r.slice()); const [nb,moved,sg]=simulateMove2D(tb,d); if(!moved) continue; const future = expectimaxSearch2D(nb, currentDepth, false, timeLimit); const score = evaluateBoard2D(nb, sg)*0.4 + future*0.6; if(score>bestScore){ bestScore=score; bestDir=d; } }
+                                    currentDepth++;
+                                }
+                                postMessage({ type:'result', bestDirection: bestDir, depth: currentDepth-1, bestScore, timeMs: Date.now()-start });
+                            }
+                        };
+                    `;
+                    const blob = new Blob([workerCode], { type: 'application/javascript' });
+                    const url = URL.createObjectURL(blob);
+                    this.searchWorker = new Worker(url);
+                    this.searchWorker.onmessage = (e)=>{
+                        if(e.data && e.data.type==='ready'){
+                            this.searchWorkerReady = true;
+                        }
+                    };
+                    // 初始化参数
+                    this.searchWorker.postMessage({ type:'init', payload: { MAX_NUMBER: this.MAX_NUMBER, positionWeights: this.positionWeights, aiParams: this.aiParams } });
+                } catch (e) {
+                    console.warn('初始化AI搜索Worker失败，回退到主线程:', e);
+                    this.searchWorker = null;
+                    this.searchWorkerReady = false;
+                }
+            }
+            // 请求Worker进行决策
+            async requestDecisionFromWorker(timeBudgetMs){
+                if(!this.searchWorker) return null;
+                // 使用已维护的 Uint8Array，复制一份发送，避免 worker 端修改
+                const flat = Array.from(this.flatBoard, x => x===255?-1:x);
+                return new Promise((resolve)=>{
+                    const onMsg = (e)=>{
+                        const d = e.data;
+                        if(!d || d.type!=='result') return;
+                        this.searchWorker.removeEventListener('message', onMsg);
+                        resolve(d);
+                    };
+                    this.searchWorker.addEventListener('message', onMsg);
+                    this.searchWorker.postMessage({ type:'decide', payload: { flatBoard: flat, aiParamsIn: this.aiParams, timeBudgetMs } });
+                    // 防超时保护
+                    setTimeout(()=>{ this.searchWorker && this.searchWorker.removeEventListener('message', onMsg); resolve(null); }, Math.max(120, timeBudgetMs+50));
+                });
+            }
+            // 初始化 Zobrist 表
+            initZobrist() {
+                if (this.zobristTable) return;
+                const states = 12; // null + 0..10
+                this.zobristTable = Array(4).fill(null).map(() =>
+                    Array(4).fill(null).map(() => Array(states).fill(0n))
+                );
+                const rand64 = () => {
+                    const hi = BigInt(Math.floor(Math.random() * 0x100000000));
+                    const lo = BigInt(Math.floor(Math.random() * 0x100000000));
+                    return (hi << 32n) ^ lo;
+                };
+                for (let r = 0; r < 4; r++) {
+                    for (let c = 0; c < 4; c++) {
+                        for (let s = 0; s < states; s++) {
+                            this.zobristTable[r][c][s] = rand64();
+                        }
+                    }
+                }
+            }
+            // 叶子评估缓存（仅在scoreGain为0时使用）
+            evaluateLeafCached(board) {
+                const key = this.getBoardKey(board);
+                const cached = this.evalLeafCache.get(key);
+                if (cached !== undefined) return cached;
+                const value = this.evaluateBoard(board, 0);
+                this.evalLeafCache.set(key, value);
+                if (this.evalLeafCache.size > 20000) this.evalLeafCache.clear();
+                return value;
+            }
+
+            // 初始化游戏
+            init(forceNew = false) {
+                if (this.autoPlayInterval) {
+                    clearInterval(this.autoPlayInterval);
+                    this.autoPlayInterval = null;
+                }
+
+                this.transpositionTable.clear();
+                this.transpositionTableAccessOrder = [];
+                this.isAutoRunning = false;
+                this.moveCounter = 0;
+                this.isAITurnLocked = false; // 重置AI回合锁定状态
+                this.DOM.autoStartButton.disabled = false;
+                this.DOM.autoPauseButton.disabled = true;
+
+                this.initializeBoardDisplay();
+                this.initZobrist();
+                this.initSearchWorker();
+                this.syncFlatFromBoard();
+                this.initFlatLineIndices();
+
+                // 加载存档列表
+                this.loadAllSaves();
+
+                if (!forceNew) {
+                    // 尝试加载最后使用的存档
+                    if (this.saves.length > 0) {
+                        // 如果有当前存档ID，使用它，否则使用第一个存档
+                        const saveIdToLoad = this.currentSaveId || this.saves[0].id;
+                        this.loadSave(saveIdToLoad);
+                    } else {
+                        // 如果没有存档，创建新游戏
+                        this.createNewSave("默认存档");
+                    }
+                } else {
+                    // 创建新游戏
+                    this.createNewSave("新游戏");
+                }
+
+                this.selectedValue = null;
+                this.selectedPositions = [];
+                this.isAIMoving = false;
+
+                this.DOM.gameOverScreen.style.display = 'none';
+                this.DOM.aiMoveIndicator.classList.remove('visible');
+                this.DOM.aiMoveIndicator.textContent = this.isAutoMode ? 'AI准备就绪' : '请放置数字，完成后点击"结束回合"';
+                this.updateAIStatus('就绪'); // 更新AI状态
+
+                this.renderBoard();
+                this.createPositionButtons();
+                this.updatePlaceButtonState();
+                this.updateEndTurnButtonState();
+
+                // 初始HUD
+                this.updateAIHUD({});
+
+                document.querySelectorAll('.number-btn').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+
+                // 初始化AI风格
+                if (this.DOM.aiStyleSelect) {
+                    this.DOM.aiStyleSelect.value = 'balanced';
+                    this.applyAIStyle('balanced');
+                }
+
+                if (forceNew) {
+                    this.saveCurrentGame();
+                }
+            }
+
+            // 初始化棋盘显示 - 修复了棋盘不显示的问题
+            initializeBoardDisplay() {
+                this.DOM.gameBoard.innerHTML = '';
+                // 确保创建16个单元格
+                for (let i = 0; i < 16; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.textContent = '';
+                    this.DOM.gameBoard.appendChild(cell);
+                }
+            }
+
+            // 应用AI策略风格：调整权重与基础深度（保留动态深度逻辑）
+            applyAIStyle(style) {
+                const descMap = {
+                    balanced: '平衡（兼顾安全与合并效率）',
+                    safe: '稳健（更重视空格、10安全与角落保护）',
+                    aggressive: '激进（更重视合并收益与单调推进）'
+                };
+
+                if (this.DOM.aiStyleDesc) {
+                    this.DOM.aiStyleDesc.textContent = `当前风格: ${descMap[style] || '平衡（兼顾安全与合并效率）'}`;
+                }
+
+                if (style === 'safe') {
+                    this.aiParams.emptyWeight = 28;
+                    this.aiParams.monoWeight = 24;
+                    this.aiParams.cornerWeight = 34;
+                    this.aiParams.smoothWeight = 22;
+                    this.aiParams.tenClusterWeight = 32;
+                    this.aiParams.dangerAvoidance = 22;
+                    this.aiParams.searchDepth = 5;
+                } else if (style === 'aggressive') {
+                    this.aiParams.emptyWeight = 20;
+                    this.aiParams.monoWeight = 28;
+                    this.aiParams.cornerWeight = 28;
+                    this.aiParams.smoothWeight = 18;
+                    this.aiParams.tenClusterWeight = 28;
+                    this.aiParams.dangerAvoidance = 16;
+                    this.aiParams.searchDepth = 5;
+                } else { // balanced
+                    this.aiParams.emptyWeight = 24;
+                    this.aiParams.monoWeight = 26;
+                    this.aiParams.cornerWeight = 30;
+                    this.aiParams.smoothWeight = 20;
+                    this.aiParams.tenClusterWeight = 30;
+                    this.aiParams.dangerAvoidance = 18;
+                    this.aiParams.searchDepth = 5;
+                }
+
+                // 清理搜索缓存以便新权重生效
+                this.transpositionTable.clear();
+                this.transpositionTableAccessOrder = [];
+                if (this.expectimaxTT) this.expectimaxTT.clear();
+                if (this.evalLeafCache) this.evalLeafCache.clear();
+
+                this.saveCurrentGame();
+                this.updateDebugInfo(`AI策略风格已切换为: ${style}`);
+            }
+
+            // 生成唯一ID用于存档
+            generateId() {
+                return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+            }
+
+            // 加载所有存档
+            loadAllSaves() {
+                try {
+                    const savedSaves = localStorage.getItem('2048Max10DualModeSaves');
+                    const lastUsedSaveId = localStorage.getItem('2048Max10DualModeLastSave');
+
+                    if (savedSaves) {
+                        this.saves = JSON.parse(savedSaves);
+                        this.currentSaveId = lastUsedSaveId;
+                    } else {
+                        // 检查是否有旧的单存档数据，如果有则迁移
+                        const oldSave = localStorage.getItem('2048Max10DualModeState');
+                        if (oldSave) {
+                            const gameState = JSON.parse(oldSave);
+                            this.saves = [{
+                                id: this.generateId(),
+                                name: "迁移的存档",
+                                timestamp: new Date().toISOString(),
+                                tenCount: gameState.tenCount || 0,
+                                score: gameState.score || 0,
+                                data: gameState
+                            }];
+                            this.currentSaveId = this.saves[0].id;
+                            this.saveAllSaves();
+                            // 删除旧的存储
+                            localStorage.removeItem('2048Max10DualModeState');
+                        } else {
+                            this.saves = [];
+                            this.currentSaveId = null;
+                        }
+                    }
+
+                    this.renderSaveSlots();
+                    return true;
+                } catch (e) {
+                    console.error('加载存档列表失败:', e);
+                    this.updateDebugInfo('加载存档失败');
+                    this.saves = [];
+                    this.currentSaveId = null;
+                    return false;
+                }
+            }
+
+            // 保存所有存档到本地存储
+            saveAllSaves() {
+                try {
+                    localStorage.setItem('2048Max10DualModeSaves', JSON.stringify(this.saves));
+                    if (this.currentSaveId) {
+                        localStorage.setItem('2048Max10DualModeLastSave', this.currentSaveId);
+                    }
+                    this.renderSaveSlots();
+                    return true;
+                } catch (e) {
+                    console.error('保存存档列表失败:', e);
+                    this.updateDebugInfo('保存存档失败');
+                    return false;
+                }
+            }
+
+            // 创建新存档
+            createNewSave(name) {
+                const newSave = {
+                    id: this.generateId(),
+                    name: name || `存档 ${this.saves.length + 1}`,
+                    timestamp: new Date().toISOString(),
+                    tenCount: 0,
+                    score: 0,
+                    data: {
+                        board: Array(4).fill().map(() => Array(4).fill(null)),
+                        score: 0,
+                        tenCount: 0,
+                        gameOver: false,
+                        hasPlacedThisTurn: false,
+                        isAutoMode: false,
+                        aiParams: this.aiParams
+                    }
+                };
+
+                this.saves.push(newSave);
+                this.currentSaveId = newSave.id;
+
+                // 更新游戏状态为新存档
+                this.board = this.safeCopyBoard(newSave.data.board);
+                this.score = newSave.data.score;
+                this.tenCount = newSave.data.tenCount;
+                this.gameOver = newSave.data.gameOver;
+                this.hasPlacedThisTurn = newSave.data.hasPlacedThisTurn;
+                this.isAutoMode = newSave.data.isAutoMode;
+                this.aiParams = newSave.data.aiParams;
+
+                this.DOM.scoreElement.textContent = this.score;
+                this.DOM.tenCountElement.textContent = this.tenCount;
+                this.applyMode(this.isAutoMode);
+
+                this.saveAllSaves();
+                this.updateDebugInfo(`已创建新存档: ${newSave.name}`);
+                return newSave.id;
+            }
+
+            // 加载指定存档
+            loadSave(saveId) {
+                const save = this.saves.find(s => s.id === saveId);
+                if (!save) {
+                    this.updateDebugInfo('存档不存在');
+                    return false;
+                }
+
+                try {
+                    // 验证存档数据
+                    if (!save.data || !Array.isArray(save.data.board) || save.data.board.length !== 4) {
+                        throw new Error('存档数据无效');
+                    }
+
+                    this.currentSaveId = saveId;
+                    this.board = this.safeCopyBoard(save.data.board);
+                    this.score = save.data.score || 0;
+                    this.tenCount = save.data.tenCount || 0;
+                    this.gameOver = save.data.gameOver || false;
+                    this.hasPlacedThisTurn = save.data.hasPlacedThisTurn || false;
+                    this.isAutoMode = save.data.isAutoMode || false;
+                    this.aiParams = save.data.aiParams || this.aiParams;
+
+                    this.DOM.scoreElement.textContent = this.score;
+                    this.DOM.tenCountElement.textContent = this.tenCount;
+                    this.applyMode(this.isAutoMode);
+
+                    this.saveAllSaves(); // 更新最后使用的存档
+                    this.updateDebugInfo(`已加载存档: ${save.name}`);
+                    return true;
+                } catch (e) {
+                    console.error('加载存档失败:', e);
+                    this.updateDebugInfo('加载存档失败，存档可能已损坏');
+                    return false;
+                }
+            }
+
+            // 保存当前游戏状态到当前存档
+            saveCurrentGame() {
+                if (this.isAIMoving || !this.currentSaveId) return false;
+
+                try {
+                    const saveIndex = this.saves.findIndex(s => s.id === this.currentSaveId);
+                    if (saveIndex === -1) {
+                        this.updateDebugInfo('保存失败: 存档不存在');
+                        return false;
+                    }
+
+                    const gameState = {
+                        board: this.board,
+                        score: this.score,
+                        tenCount: this.tenCount,
+                        gameOver: this.gameOver,
+                        hasPlacedThisTurn: this.hasPlacedThisTurn,
+                        isAutoMode: this.isAutoMode,
+                        aiParams: this.aiParams
+                    };
+
+                    // 更新存档信息
+                    this.saves[saveIndex].data = gameState;
+                    this.saves[saveIndex].timestamp = new Date().toISOString();
+                    this.saves[saveIndex].tenCount = this.tenCount;
+                    this.saves[saveIndex].score = this.score;
+
+                    this.saveAllSaves();
+
+                    this.DOM.storageStatus.classList.add('visible');
+                    setTimeout(() => {
+                        this.DOM.storageStatus.classList.remove('visible');
+                    }, 1500);
+
+                    return true;
+                } catch (e) {
+                    console.error('保存游戏状态失败:', e);
+                    this.updateDebugInfo('保存游戏状态失败');
+                    return false;
+                }
+            }
+
+            // 重命名当前存档
+            renameCurrentSave(newName) {
+                if (!this.currentSaveId || !newName || newName.trim() === '') return false;
+
+                const saveIndex = this.saves.findIndex(s => s.id === this.currentSaveId);
+                if (saveIndex === -1) return false;
+
+                this.saves[saveIndex].name = newName.trim();
+                this.saveAllSaves();
+                this.updateDebugInfo(`存档已重命名为: ${newName}`);
+                return true;
+            }
+
+            // 删除指定存档
+            deleteSave(saveId) {
+                const saveIndex = this.saves.findIndex(s => s.id === saveId);
+                if (saveIndex === -1) return false;
+
+                // 如果删除的是当前存档，需要切换到另一个存档或创建新存档
+                const wasCurrentSave = saveId === this.currentSaveId;
+                this.saves.splice(saveIndex, 1);
+
+                if (wasCurrentSave) {
+                    if (this.saves.length > 0) {
+                        this.loadSave(this.saves[0].id);
+                    } else {
+                        this.createNewSave("默认存档");
+                    }
+                }
+
+                this.saveAllSaves();
+                this.updateDebugInfo('存档已删除');
+                return true;
+            }
+
+            // 复制指定存档
+            copySave(saveId) {
+                const saveIndex = this.saves.findIndex(s => s.id === saveId);
+                if (saveIndex === -1) {
+                    this.updateDebugInfo('复制失败: 存档不存在');
+                    return false;
+                }
+
+                const source = this.saves[saveIndex];
+                const newId = this.generateId();
+                const nameBase = source.name || '存档';
+                const newName = `${nameBase} - 副本`;
+
+                // 深拷贝数据，避免引用同一对象
+                const dataCopy = JSON.parse(JSON.stringify(source.data));
+                const newSave = {
+                    id: newId,
+                    name: newName,
+                    timestamp: new Date().toISOString(),
+                    tenCount: source.tenCount || 0,
+                    score: source.score || 0,
+                    data: dataCopy
+                };
+
+                this.saves.unshift(newSave);
+                this.currentSaveId = newId;
+                this.saveAllSaves();
+
+                // 载入新存档以便立即使用
+                this.loadSave(newId);
+                this.renderSaveSlots();
+                this.renderBoard();
+                this.createPositionButtons();
+                this.updatePlaceButtonState();
+                this.updateEndTurnButtonState();
+                this.updateDebugInfo(`已创建存档副本: ${newName}`);
+                return true;
+            }
+
+            // 渲染存档列表
+            renderSaveSlots() {
+                this.DOM.saveSlots.innerHTML = '';
+
+                if (this.saves.length === 0) {
+                    const emptyMessage = document.createElement('div');
+                    emptyMessage.textContent = '没有存档，点击"新建存档"开始游戏';
+                    emptyMessage.style.textAlign = 'center';
+                    emptyMessage.style.padding = '10px';
+                    this.DOM.saveSlots.appendChild(emptyMessage);
+                    return;
+                }
+
+                // 按时间排序，最新的在前面
+                const sortedSaves = [...this.saves].sort((a, b) =>
+                    new Date(b.timestamp) - new Date(a.timestamp)
+                );
+
+                sortedSaves.forEach(save => {
+                    const saveItem = document.createElement('div');
+                    saveItem.className = `save-item ${save.id === this.currentSaveId ? 'active' : ''}`;
+
+                    // 格式化时间
+                    const date = new Date(save.timestamp);
+                    const formattedTime = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+
+                    saveItem.innerHTML = `
+                        <div class="save-info">
+                            <div class="save-name">${save.name}</div>
+                            <div class="save-details">最后游玩: ${formattedTime} | 10的数量: ${save.tenCount} | 分数: ${save.score}</div>
+                        </div>
+                        <div class="save-actions">
+                            <button class="load-save" data-save-id="${save.id}">加载</button>
+                            <button class="duplicate-save" data-save-id="${save.id}">复制</button>
+                        </div>
+                    `;
+
+                    this.DOM.saveSlots.appendChild(saveItem);
+
+                    // 添加加载存档事件
+                    saveItem.querySelector('.load-save').addEventListener('click', () => {
+                        if (!this.isAIMoving) {
+                            this.loadSave(save.id);
+                            this.renderBoard();
+                            this.createPositionButtons();
+                            this.updatePlaceButtonState();
+                            this.updateEndTurnButtonState();
+                        }
+                    });
+
+                    // 添加复制存档事件
+                    saveItem.querySelector('.duplicate-save').addEventListener('click', () => {
+                        if (!this.isAIMoving) {
+                            this.copySave(save.id);
+                        }
+                    });
+                });
+            }
+
+            // 应用游戏模式
+            applyMode(autoMode) {
+                this.isAutoMode = autoMode;
+                document.body.classList.toggle('mode-auto', autoMode);
+                document.body.classList.toggle('mode-manual', !autoMode);
+
+                if (autoMode) {
+                    this.DOM.currentModeElement.textContent = '当前模式: 自动运行';
+                    this.DOM.modeToggleButton.textContent = '切换到手动放置模式';
+                    this.updateDebugInfo('自动模式 - 高级AI策略运行中');
+                } else {
+                    this.DOM.currentModeElement.textContent = '当前模式: 手动放置';
+                    this.DOM.modeToggleButton.textContent = '切换到自动运行模式';
+                    this.updateDebugInfo('手动模式 - 可放置数字并让AI移动');
+                }
+
+                this.updatePlaceButtonState();
+                this.updateEndTurnButtonState();
+            }
+
+            // 切换模式
+            toggleMode() {
+                if (this.isAIMoving || this.gameOver) return;
+
+                if (this.isAutoRunning) {
+                    this.stopAutoPlay();
+                }
+
+                this.applyMode(!this.isAutoMode);
+                this.saveCurrentGame();
+            }
+
+            // 开始自动播放
+            startAutoPlay() {
+                if (this.isAutoRunning || this.gameOver || !this.isAutoMode) return;
+
+                this.isAutoRunning = true;
+                this.DOM.autoStartButton.disabled = true;
+                this.DOM.autoPauseButton.disabled = false;
+                this.updateDebugInfo(`自动运行中 - 搜索深度: ${this.aiParams.searchDepth}`);
+                this.updateAIStatus('运行中');
+
+                // 如果棋盘为空，先投放起始方块以避免立即判负
+                if (this.countEmptyCells(this.board) === 16) {
+                    this.addRandomTile();
+                    this.addRandomTile();
+                    this.renderBoard();
+                    this.updateTenCount();
+                    this.saveCurrentGame();
+                }
+
+                const scheduleNext = () => {
+                    if (!this.isAutoRunning || this.gameOver) return;
+                    // 自适应延时：基于上一次决策耗时与用户设定的moveDelay进行调和
+                    const computeMs = this.lastDecisionMs || Math.floor(this.moveDelay * 0.5);
+                    const baseDelay = this.moveDelay;
+                    const adaptiveDelay = Math.max(50, Math.min(2000, Math.floor(baseDelay * 0.6 + computeMs * 0.6)));
+                    clearTimeout(this.autoTimeoutId);
+                    this.autoTimeoutId = setTimeout(() => {
+                        // 每50步清理一次缓存，防止内存问题
+                        this.moveCounter++;
+                        if (this.moveCounter % 50 === 0) {
+                            this.transpositionTable.clear();
+                            this.transpositionTableAccessOrder = [];
+                            this.updateAIStatus(`运行中 (已清理缓存, 步数: ${this.moveCounter})`);
+                        }
+
+                        if (this.isAutoRunning && !this.gameOver && !this.isAIMoving) {
+                            this.aiMakeMove(true);
+                        }
+                        scheduleNext();
+                    }, adaptiveDelay);
+                };
+
+                // 立即执行一次移动然后调度
+                this.aiMakeMove(true);
+                scheduleNext();
+            }
+
+            // 停止自动播放
+            stopAutoPlay() {
+                if (!this.isAutoRunning) return;
+
+                this.isAutoRunning = false;
+                clearInterval(this.autoPlayInterval);
+                this.autoPlayInterval = null;
+                clearTimeout(this.autoTimeoutId);
+                this.autoTimeoutId = null;
+                this.DOM.autoStartButton.disabled = false;
+                this.DOM.autoPauseButton.disabled = true;
+                this.updateDebugInfo('自动运行已暂停');
+                this.updateAIStatus('已暂停');
+            }
+
+            // 更新10的数量
+            updateTenCount() {
+                let count = 0;
+                for (let row = 0; row < 4; row++) {
+                    for (let col = 0; col < 4; col++) {
+                        if (this.board[row][col] === this.MAX_NUMBER) {
+                            count++;
+                        }
+                    }
+                }
+
+                this.tenCount = count;
+                this.DOM.tenCountElement.textContent = this.tenCount;
+            }
+
+            // 渲染棋盘 - 修复了棋盘渲染逻辑
+            renderBoard() {
+                // 确保棋盘有16个单元格
+                if (this.DOM.gameBoard.children.length !== 16) {
+                    this.initializeBoardDisplay();
+                }
+
+                let index = 0;
+                for (let row = 0; row < 4; row++) {
+                    for (let col = 0; col < 4; col++) {
+                        const value = this.board[row][col];
+                        const cell = this.DOM.gameBoard.children[index];
+                        index++;
+
+                        // 重置单元格样式
+                        cell.className = 'cell';
+                        cell.textContent = '';
+
+                        if (value !== null) {
+                            cell.textContent = value;
+                            cell.classList.add(`tile-${value}`);
+                        }
+                    }
+                }
+            }
+
+            // 创建位置选择按钮
+            createPositionButtons() {
+                this.DOM.positionSelection.innerHTML = '';
+
+                for (let row = 0; row < 4; row++) {
+                    for (let col = 0; col < 4; col++) {
+                        const btn = document.createElement('button');
+                        btn.className = 'position-btn';
+                        btn.dataset.row = row;
+                        btn.dataset.col = col;
+
+                        // 准确的禁用条件判断
+                        const isDisabled = this.board[row][col] !== null ||
+                            this.isAIMoving ||
+                            this.gameOver ||
+                            this.isAutoMode;
+
+                        btn.disabled = isDisabled;
+
+                        if (!isDisabled) {
+                            const isSelected = this.selectedPositions.some(pos =>
+                                pos.row === row && pos.col === col
+                            );
+                            if (isSelected) {
+                                btn.classList.add('selected');
+                            }
+                        }
+
+                        btn.addEventListener('click', () => {
+                            const pos = { row, col };
+                            const index = this.selectedPositions.findIndex(p =>
+                                p.row === row && p.col === col
+                            );
+
+                            if (index === -1) {
+                                this.selectedPositions.push(pos);
+                                btn.classList.add('selected');
+                            } else {
+                                this.selectedPositions.splice(index, 1);
+                                btn.classList.remove('selected');
+                            }
+
+                            this.updateSelectedCount();
+                            this.updatePlaceButtonState();
+                            this.updateDebugInfo(`已选择 ${this.selectedPositions.length} 个位置`);
+                        });
+
+                        this.DOM.positionSelection.appendChild(btn);
+                    }
+                }
+            }
+
+            // 更新选中位置计数
+            updateSelectedCount() {
+                this.DOM.selectedCountElement.textContent = this.selectedPositions.length;
+            }
+
+            // 更新放置按钮状态
+            updatePlaceButtonState() {
+                const hasValidValue = this.selectedValue !== null;
+                const hasPositions = this.selectedPositions.length > 0;
+                // 更明确的启用条件
+                const isEnabled = hasValidValue &&
+                    hasPositions &&
+                    !this.gameOver &&
+                    !this.isAIMoving &&
+                    !this.isAutoMode &&
+                    !this.isAITurnLocked;  // 确保AI回合未锁定
+
+                this.DOM.placeButton.disabled = !isEnabled;
+
+                if (!isEnabled && !this.isAIMoving && !this.isAutoMode && !this.gameOver) {
+                    if (this.selectedValue === null) {
+                        this.updateDebugInfo('请先选择一个数字（包括0）');
+                    } else if (this.selectedPositions.length === 0) {
+                        this.updateDebugInfo('请选择至少一个空白位置');
+                    } else if (this.isAITurnLocked) {
+                        this.updateDebugInfo('等待AI完成当前移动...');
+                    }
+                }
+            }
+
+            // 更新结束回合按钮状态
+            updateEndTurnButtonState() {
+                this.DOM.endTurnButton.disabled = !this.hasPlacedThisTurn || this.gameOver || this.isAIMoving || this.isAutoMode;
+
+                if (this.hasPlacedThisTurn && !this.isAIMoving && !this.gameOver && !this.isAutoMode) {
+                    this.updateDebugInfo('可继续放置或点击"结束回合"让AI移动');
+                }
+            }
+
+            // 更新调试信息
+            updateDebugInfo(message) {
+                this.DOM.debugInfo.textContent = `状态: ${message}`;
+            }
+
+            // 更新AI状态信息
+            updateAIStatus(message) {
+                this.DOM.aiStatus.textContent = `AI状态: ${message}`;
+            }
+
+            // 清除选择
+            clearSelection() {
+                if (this.isAIMoving || this.isAutoMode) return;
+
+                this.selectedValue = null;
+                this.selectedPositions = [];
+                document.querySelectorAll('.number-btn').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+                document.querySelectorAll('.position-btn').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+                this.updateSelectedCount();
+                this.updatePlaceButtonState();
+                this.updateDebugInfo('选择已清除');
+            }
+
+            // 更新AI HUD
+            updateAIHUD({ depth = '-', bestDir = '-', bestScore = '-', searchStart = null } = {}) {
+                try {
+                    if (!this.DOM.hudSteps) return;
+                    this.DOM.hudSteps.textContent = String(this.moveCounter || 0);
+                    this.DOM.hudLastMs.textContent = String(this.lastDecisionMs || 0);
+                    this.DOM.hudEmpty.textContent = String(this.countEmptyCells(this.board));
+                    this.DOM.hudTen.textContent = String(this.countTenNumbers(this.board));
+                    this.DOM.hudMax.textContent = String(this.getMaxNumber(this.board));
+                    this.DOM.hudStyle.textContent = this.DOM.aiStyleSelect ? this.DOM.aiStyleSelect.value : 'balanced';
+                    this.DOM.hudDepth.textContent = String(depth);
+                    this.DOM.hudBestDir.textContent = bestDir;
+                    this.DOM.hudBestScore.textContent = typeof bestScore === 'number' ? bestScore.toFixed(2) : String(bestScore);
+                    this.DOM.hudTTSize.textContent = String(this.transpositionTable ? this.transpositionTable.size : 0);
+                    this.DOM.hudExTTSize.textContent = String(this.expectimaxTT ? this.expectimaxTT.size : 0);
+                    this.DOM.hudEvalCache.textContent = String(this.evalLeafCache ? this.evalLeafCache.size : 0);
+                } catch (_) { }
+            }
+
+            // 放置方块
+            placeTile() {
+                if (this.selectedValue === null || this.selectedPositions.length === 0 || this.gameOver || this.isAIMoving || this.isAutoMode) {
+                    this.updateDebugInfo('放置失败：无效状态');
+                    return;
+                }
+
+                let placedCount = 0;
+                this.selectedPositions.forEach(({ row, col }) => {
+                    if (this.board[row][col] === null) {
+                        this.board[row][col] = this.selectedValue;
+                        placedCount++;
+
+                        const index = row * 4 + col;
+                        const cell = this.DOM.gameBoard.children[index];
+                        cell.classList.add('tile-moved');
+                        setTimeout(() => cell.classList.remove('tile-moved'), 200);
+                    }
+                });
+
+                this.hasPlacedThisTurn = true;
+                this.updateDebugInfo(`已放置 ${placedCount} 个数字 ${this.selectedValue}`);
+
+                this.selectedValue = null;
+                this.selectedPositions = [];
+                document.querySelectorAll('.number-btn').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+                document.querySelectorAll('.position-btn').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+
+                this.syncFlatFromBoard();
+                this.updateSelectedCount();
+                this.renderBoard();
+                this.createPositionButtons();
+                this.updatePlaceButtonState();
+                this.updateEndTurnButtonState();
+
+                this.updateTenCount();
+                this.saveCurrentGame();
+            }
+
+            // 随机生成方块（自动模式）
+            addRandomTile() {
+                // 收集空白位置
+                const emptyPositions = [];
+                for (let row = 0; row < 4; row++) {
+                    for (let col = 0; col < 4; col++) {
+                        if (this.board[row][col] === null) {
+                            emptyPositions.push({ row, col });
+                        }
+                    }
+                }
+
+                if (emptyPositions.length === 0) return false;
+
+                // 检查是否有较大数字（定义为≥5）
+                let hasLargeNumber = false;
+                for (let row = 0; row < 4; row++) {
+                    for (let col = 0; col < 4; col++) {
+                        if (this.board[row][col] !== null && this.board[row][col] >= 5) {
+                            hasLargeNumber = true;
+                            break;
+                        }
+                    }
+                    if (hasLargeNumber) break;
+                }
+
+                // 决定生成的数字：默认1，有较大数字时5%概率生成0
+                let value = 1;
+                if (hasLargeNumber && Math.random() < 0.05) {
+                    value = 0;
+                }
+
+                // 随机选择一个空白位置
+                const { row, col } = emptyPositions[Math.floor(Math.random() * emptyPositions.length)];
+
+                // 放置数字
+                this.board[row][col] = value;
+                const index = row * 4 + col;
+                const cell = this.DOM.gameBoard.children[index];
+                cell.classList.add('tile-moved');
+                setTimeout(() => cell.classList.remove('tile-moved'), 200);
+
+                this.setFlatCell(row, col, value);
+                return true;
+            }
+
+            // 结束回合
+            endTurn() {
+                // 检查是否已锁定，防止重复触发AI移动
+                if (!this.hasPlacedThisTurn || this.gameOver || this.isAIMoving || this.isAutoMode || this.isAITurnLocked) return;
+                this.isAITurnLocked = true; // 触发AI移动前锁定回合
+                this.aiMakeMove(false);
+            }
+
+            // 检查方向是否可移动
+            canMoveInDirection(direction) {
+                const tempBoard = this.safeCopyBoard(this.board);
+                const [moved] = this.simulateMove(tempBoard, direction);
+                return moved;
+            }
+
+            // 检查是否可移动
+            canMove(board = this.board) {
+                // 首先检查board是否为有效的4x4数组
+                if (!Array.isArray(board) || board.length !== 4) {
+                    return false;
+                }
+
+                for (let row = 0; row < 4; row++) {
+                    // 检查每行是否为数组且长度为4
+                    if (!Array.isArray(board[row]) || board[row].length !== 4) {
+                        return false;
+                    }
+
+                    for (let col = 0; col < 4; col++) {
+                        if (board[row][col] === null) {
+                            return true;
+                        }
+                    }
+                }
+
+                // 检查各方向是否可移动
+                const directions = ['up', 'down', 'left', 'right'];
+                for (const dir of directions) {
+                    // 使用安全的深拷贝函数
+                    const tempBoard = this.safeCopyBoard(board);
+                    const [moved] = this.simulateMove(tempBoard, dir);
+                    if (moved) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            // 安全的棋盘拷贝函数
+            safeCopyBoard(board) {
+                try {
+                    // 确保拷贝前棋盘是有效的
+                    if (!Array.isArray(board) || board.length !== 4) {
+                        return Array(4).fill().map(() => Array(4).fill(null));
+                    }
+
+                    return board.map(row => {
+                        if (!Array.isArray(row) || row.length !== 4) {
+                            return [null, null, null, null];
+                        }
+                        return [...row];
+                    });
+                } catch (e) {
+                    console.error('拷贝棋盘失败:', e);
+                    return Array(4).fill().map(() => Array(4).fill(null));
+                }
+            }
+
+            // 获取游戏阶段（按空格数+最大数字划分）
+            getGameStage(emptyCells, maxNum) {
+                if (emptyCells > 10 || maxNum < 4) return 'early'; // 初期：空格多/最大数小
+                if (emptyCells > 4 && maxNum < 8) return 'mid'; // 中期：空格中等/最大数中等
+                return 'late'; // 后期：空格少/最大数大（≥8）
+            }
+
+            // 获取棋盘最大数字
+            getMaxNumber(board) {
+                return Math.max(...board.flat().filter(v => v !== null), 0);
+            }
+
+            // 计算位置得分（角落/边缘优先，高价值数字加权）
+            calculatePositionScore(board) {
+                let score = 0;
+                // 对高价值数字使用指数增长权重，强化10和高数字的位置优先级
+                for (let row = 0; row < 4; row++) {
+                    for (let col = 0; col < 4; col++) {
+                        const value = board[row][col];
+                        if (value !== null) {
+                            // 高价值数字在优势位置获得指数级加分：10权重3倍，8-9权重2.5倍，5-7权重2倍
+                            const valueWeight = value === this.MAX_NUMBER ? 3 :
+                                value >= 8 ? 2.5 :
+                                    value >= 5 ? 2 : 1;
+                            // 数字值使用1.2次方放大高数字差异，位置权重保留原有矩阵
+                            score += Math.pow(value, 1.2) * this.positionWeights[row][col] * valueWeight;
+                        }
+                    }
+                }
+                return score / 200; // 调整归一化因子，避免分数溢出
+            }
+
+            // 优化单调性计算（行/列分离，大数字方向权重更高）
+            calculateMonotonicityV2(board) {
+                let rowScore = 0;
+                let colScore = 0;
+                const totalRowPairs = 4 * 3;
+                const totalColPairs = 4 * 3;
+
+                // 行单调性：优先「从角落向中心递减」（如左上角→右下角）
+                for (let row = 0; row < 4; row++) {
+                    const rowMax = Math.max(...board[row].filter(v => v !== null), 0);
+                    for (let col = 0; col < 3; col++) {
+                        const current = board[row][col] || 0;
+                        const next = board[row][col + 1] || 0;
+                        // 大数字所在行的单调性权重翻倍
+                        const weight = current === rowMax || next === rowMax ? 2 : 1;
+                        rowScore += (current >= next ? 1 : -1) * weight;
+                    }
+                }
+
+                // 列单调性：同理优先大数字列
+                for (let col = 0; col < 4; col++) {
+                    const colVals = board.map(row => row[col]).filter(v => v !== null);
+                    const colMax = colVals.length ? Math.max(...colVals) : 0;
+                    for (let row = 0; row < 3; row++) {
+                        const current = board[row][col] || 0;
+                        const next = board[row + 1][col] || 0;
+                        const weight = current === colMax || next === colMax ? 2 : 1;
+                        colScore += (current >= next ? 1 : -1) * weight;
+                    }
+                }
+
+                // 归一化（行权重略高于列，因2048横向操作更自然）
+                return (rowScore / totalRowPairs * 1.2 + colScore / totalColPairs) / 2.2;
+            }
+
+            // 优化平滑度计算（大数字相邻平滑权重更高）
+            calculateSmoothnessV2(board) {
+                let smoothness = 0;
+                for (let row = 0; row < 4; row++) {
+                    for (let col = 0; col < 4; col++) {
+                        const current = board[row][col] || 0;
+                        if (current === 0) continue;
+
+                        // 相邻数字与当前数字的差值越小，平滑度越高；大数字的平滑权重更高
+                        const weight = current >= 8 ? 3 : (current >= 5 ? 2 : 1); // 10/9/8权重3，7/6/5权重2，其余1
+
+                        // 水平相邻
+                        if (col < 3) {
+                            const next = board[row][col + 1] || 0;
+                            if (next > 0) smoothness -= Math.abs(current - next) / weight;
+                        }
+                        // 垂直相邻
+                        if (row < 3) {
+                            const next = board[row + 1][col] || 0;
+                            if (next > 0) smoothness -= Math.abs(current - next) / weight;
+                        }
+                    }
+                }
+                return smoothness / 5; // 归一化（放大差异）
+            }
+
+            // 计算10的聚类程度（聚集度越高越好）
+            calculateTenCluster(board) {
+                const tenPositions = [];
+                for (let row = 0; row < 4; row++) {
+                    for (let col = 0; col < 4; col++) {
+                        if (board[row][col] === this.MAX_NUMBER) {
+                            tenPositions.push({ row, col });
+                        }
+                    }
+                }
+
+                if (tenPositions.length < 2) return 0;
+
+                let totalDistance = 0;
+                let pairCount = 0;
+                for (let i = 0; i < tenPositions.length; i++) {
+                    for (let j = i + 1; j < tenPositions.length; j++) {
+                        const dist = Math.abs(tenPositions[i].row - tenPositions[j].row) +
+                            Math.abs(tenPositions[i].col - tenPositions[j].col);
+                        totalDistance += dist;
+                        pairCount++;
+                    }
+                }
+
+                const avgDistance = totalDistance / pairCount;
+                return 1 - (avgDistance / 6); // 归一化到-1~1
+            }
+
+            // 危险评估（规避「小数字包围大数字」「10旁边无空格」等局面）
+            calculateDanger(board) {
+                let danger = 0;
+                const maxNum = this.getMaxNumber(board);
+
+                for (let row = 0; row < 4; row++) {
+                    for (let col = 0; col < 4; col++) {
+                        const val = board[row][col];
+                        if (val === null || val === 0) continue;
+
+                        // 危险1：大数字（≥8）被小数字（≤3）包围（4个方向）
+                        if (val >= 8) {
+                            const neighbors = [
+                                row > 0 ? board[row - 1][col] : null,
+                                row < 3 ? board[row + 1][col] : null,
+                                col > 0 ? board[row][col - 1] : null,
+                                col < 3 ? board[row][col + 1] : null
+                            ].filter(v => v !== null);
+
+                            const smallNeighborCount = neighbors.filter(v => v <= 3).length;
+                            danger += smallNeighborCount * 0.2; // 每有1个小邻居+0.2危险分
+                        }
+
+                        // 危险2：10旁边无空格（无法为其他数字腾位置）
+                        if (val === this.MAX_NUMBER) {
+                            const emptyNeighbors = [
+                                row > 0 ? board[row - 1][col] === null : false,
+                                row < 3 ? board[row + 1][col] === null : false,
+                                col > 0 ? board[row][col - 1] === null : false,
+                                col < 3 ? board[row][col + 1] === null : false
+                            ].filter(v => v).length;
+
+                            danger += emptyNeighbors === 0 ? 0.5 : 0; // 无空格+0.5危险分
+                        }
+
+                        // 危险3：0旁边无大数字（0无法高效合成）
+                        if (val === 0) {
+                            const bigNeighbors = [
+                                row > 0 ? board[row - 1][col] >= 5 : false,
+                                row < 3 ? board[row + 1][col] >= 5 : false,
+                                col > 0 ? board[row][col - 1] >= 5 : false,
+                                col < 3 ? board[row][col + 1] >= 5 : false
+                            ].filter(v => v).length;
+
+                            danger += bigNeighbors === 0 ? 0.1 : 0; // 无大邻居+0.1危险分
+                        }
+                    }
+                }
+
+                return -danger; // 危险分越低越好（转为负分融入总评分）
+            }
+            // 计算潜在合并机会（评估未来可合并的可能性）
+            calculateMergePotential(board) {
+                let potential = 0;
+                const maxNum = this.getMaxNumber(board);
+
+                // 检查水平方向潜在合并
+                for (let row = 0; row < 4; row++) {
+                    for (let col = 0; col < 3; col++) {
+                        const current = board[row][col] || 0;
+                        const next = board[row][col + 1] || 0;
+
+                        if (current === 0 && next > 0 && next < this.MAX_NUMBER) {
+                            // 0和可增长数字相邻有合并潜力
